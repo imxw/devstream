@@ -4,7 +4,7 @@ SELF_DIR=$(dir $(lastword $(MAKEFILE_LIST)))
 GOOS=$(shell go env GOOS)
 GOARCH=$(shell go env GOARCH)
 GO_PLUGIN_BUILD=go build -buildmode=plugin -trimpath -gcflags="all=-N -l"
-PLUGINS=$(notdir $(wildcard $(ROOT_DIR)/cmd/plugin/*))
+PLUGINS?=$(notdir $(wildcard $(ROOT_DIR)/cmd/plugin/*))
 PLUGIN_SUFFIX=${GOOS}-${GOARCH}_${VERSION}
 
 DTM_ROOT=github.com/devstream-io/devstream
@@ -32,9 +32,22 @@ PLUGINS_DIR := $(ROOT_DIR)/.devstream
 $(shell mkdir -p $(PLUGINS_DIR))
 endif
 
+
+define USAGE_OPTIONS    
+                         
+Options:
+  VERSION             The version information compiled into binaries.The default is obtained from gsemver or git.
+                      Examples: "make build VERSION=x.x.x", "make build-core VERSION=x.x.x"
+  PLUGINS             The plugins to build. Default is all of plugins.
+                      Examples: "make build-plugins PLUGINS=argocd", "make build-plugins PLUGINS='trello argocd'"
+endef    
+
+export USAGE_OPTIONS
+
 .PHONY: help
 help: ## Display this help.
-	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9.%-]+:.*?##/ { printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target> <option>\033[0m\n\nTargets:\n"} /^[a-zA-Z_0-9.%-]+:.*?##/ { printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+	@echo "$$USAGE_OPTIONS"
 
 .PHONY: clean
 clean: ## Remove dtm and plugins. It's best to run a "clean" before "build".
@@ -49,7 +62,7 @@ build-core: fmt vet mod-tidy ## Build dtm core only, without plugins, locally.
 	@echo ">>>>>>>>>>>> 'dtm' has been generated in the current directory"
 
 .PHONY: build-plugin.%
-build-plugin.%: fmt vet mod-tidy ## Build one dtm plugin, like "make build-plugin.argocd".
+build-plugin.%: fmt vet mod-tidy 
 	$(eval plugin_name := $(strip $*))
 	${GO_PLUGIN_BUILD} -o .devstream/${plugin_name}-${PLUGIN_SUFFIX}.so ${ROOT_DIR}/cmd/plugin/${plugin_name}
 	@$(MAKE) md5-plugin.$(plugin_name)
