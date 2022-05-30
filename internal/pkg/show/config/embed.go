@@ -60,4 +60,7 @@ var (
 
 	//go:embed plugins/hashicorp-vault.yaml
 	VaultDefaultConfig string
+
+	//go:embed plugins/tekton.yaml
+	TektonDefaultConfig string
 )

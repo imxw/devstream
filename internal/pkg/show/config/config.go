@@ -25,6 +25,7 @@ var pluginDefaultConfigs = map[string]string{
 	"helm-generic":                   HelmGenericDefaultConfig,
 	"gitlab-repo-scaffolding-golang": GitLabRepoScaffoldingGolangDefaultConfig,
 	"hashicorp-vault":                VaultDefaultConfig,
+	"tekton":                         TektonDefaultConfig,
 }
 
 func Show() error {
